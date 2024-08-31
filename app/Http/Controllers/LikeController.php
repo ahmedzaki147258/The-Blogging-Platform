@@ -16,7 +16,7 @@ class LikeController extends Controller
             'post_id' => 'required|exists:posts,id',
         ]);
         if ($validator->fails()) {
-            return $this->apiResponse(null, $validator->errors(), 400);
+            return $this->apiResponse((object)[], $validator->errors(), 400);
         }
 
         $existingLike = Like::where('user_id', $request->user_id)->where('post_id', $request->post_id)->first();
@@ -28,7 +28,7 @@ class LikeController extends Controller
             Like::create(['user_id' => $request->user_id, 'post_id' => $request->post_id]);
             $message = 'Like added successfully.';
         }
-        return $this->apiResponse(null, $message, 200);
+        return $this->apiResponse((object)[], $message, 200);
     }
 
     public function getLikesCount(){

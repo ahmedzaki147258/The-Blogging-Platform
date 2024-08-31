@@ -20,7 +20,7 @@ class PostController extends Controller
     public function index(){
         $posts = Post::get();
         if ($posts->isEmpty()) {
-            return $this->apiResponse(null, 'No posts found', 404);
+            return $this->apiResponse((object)[], 'No posts found', 404);
         }
 
         return $this->apiResponse(PostResource::collection($posts), 'ok', 200);   // Retrieve all posts
@@ -31,7 +31,7 @@ class PostController extends Controller
             $post = Post::findOrFail($id);
             return $this->apiResponse(new PostResource($post), 'ok', 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }                                                                        // Retrieve a specific post by ID
     }
 
@@ -41,43 +41,45 @@ class PostController extends Controller
             'content' => 'required',
             'user_id' => 'required|exists:users,id',
         ]);
-
         if($validator->fails()){
-            return $this->apiResponse(null, $validator->errors(), 400);
+            return $this->apiResponse((object)[], $validator->errors(), 400);
         }
 
-        $post = Post::create($request->all());
+        $post = Post::create([
+            'title' => $request->title,
+            'content' => $request->content,
+            'user_id' => $request->user_id,
+        ]);
         if($post){
             return $this->apiResponse(new PostResource($post), 'success insert', 201);
         } else{
-            return $this->apiResponse(null, 'Failed to create the post', 400);
+            return $this->apiResponse((object)[], 'Failed to create the post', 400);
         }                                                                           // Create a new post
     }
 
     public function update(Request $request, $id){
         $validator = Validator::make($request->all(), [
-            'title' => 'required|max:255',
-            'content' => 'required',
+            'title' => 'nullable|max:255',
+            'content' => 'nullable',
         ]);
         if($validator->fails()){
-            return $this->apiResponse(null, $validator->errors(), 400);
+            return $this->apiResponse((object)[], $validator->errors(), 400);
         }
 
         try {
             $post = Post::findOrFail($id);
-            $post->update($request->all());
+            $post->update($request->only(['title', 'content']));
             return $this->apiResponse(new PostResource($post), 'success update', 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }                                                                            // Update an existing post
     }
 
     public function destroy($id)
     {
         $post = Post::find($id);
-
         if (!$post) {
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
 
         $directory = public_path('upload');
@@ -111,7 +113,7 @@ class PostController extends Controller
             $responseMessage .= '. Not found: ' . implode(', ', $notFoundFiles);
         }
 
-        return $this->apiResponse(null, $responseMessage, 204);             // Delete a post
+        return $this->apiResponse((object)[], $responseMessage, 204);             // Delete a post
     }
 
 
@@ -121,7 +123,7 @@ class PostController extends Controller
     {
         $keyword = $request->input('keyword');
         if (empty($keyword)) {
-            return $this->apiResponse(null, 'Keyword is empty', 400);
+            return $this->apiResponse((object)[], 'Keyword is empty', 400);
         }
 
         $posts = Post::where('title', 'like', "%$keyword%")
@@ -129,7 +131,7 @@ class PostController extends Controller
                       ->get();
 
         if ($posts->isEmpty()) {
-            return $this->apiResponse(null, 'No posts found for the given ' . $keyword, 404);
+            return $this->apiResponse((object)[], 'No posts found for the given ' . $keyword, 404);
         }
         return $this->apiResponse($posts, 'success search', 200);
     }
@@ -139,7 +141,7 @@ class PostController extends Controller
     public function getUser($id){
         $post = Post::find($id);
         if(!$post){
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
         return $this->apiResponse(new UserResource($post->user), 'success user', 200);
     }                                                                       // Many to One
@@ -147,7 +149,7 @@ class PostController extends Controller
     public function getComments($id){
         $post = Post::find($id);
         if(!$post){
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
         return $this->apiResponse(CommentResource::collection($post->comments), 'success comments', 200);
 }                                                                            // One to Many
@@ -155,7 +157,7 @@ class PostController extends Controller
     public function getTags($id){
         $post = Post::find($id);
         if(!$post){
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
         return $this->apiResponse(TagResource::collection($post->tags), 'success tags', 200);
     }                                                                       // Many to Many
@@ -163,7 +165,7 @@ class PostController extends Controller
     public function getImages($id){
         $post = Post::find($id);
         if(!$post){
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
         return $this->apiResponse(ImageResource::collection($post->images), 'success images', 200);
 }                                                                           // One to Many
@@ -171,7 +173,7 @@ class PostController extends Controller
     public function getLikes($id){
         $post = Post::find($id);
         if(!$post){
-            return $this->apiResponse(null, 'The post not found', 404);
+            return $this->apiResponse((object)[], 'The post not found', 404);
         }
         return $this->apiResponse(LikeResource::collection($post->likes), 'success likes', 200);
     }                                                                       // One to Many

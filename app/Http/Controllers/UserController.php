@@ -17,7 +17,7 @@ class UserController extends Controller
     public function index(){
         $users = User::orderBy('name')->get();
         if ($users->isEmpty()) {
-            return $this->apiResponse(null, 'No users found', 404);
+            return $this->apiResponse((object)[], 'No users found', 404);
         }
 
         return $this->apiResponse(UserResource::collection($users), 'ok', 200);   // Retrieve all users
@@ -28,7 +28,7 @@ class UserController extends Controller
             $user = User::findOrFail($id);
             return $this->apiResponse(new UserResource($user), 'ok', 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return $this->apiResponse(null, 'The users not found', 404);
+            return $this->apiResponse((object)[], 'The users not found', 404);
         }                                                                        // Retrieve a specific user by ID
     }
 
@@ -36,7 +36,7 @@ class UserController extends Controller
     public function getPosts($id){
         $user = User::find($id);
         if(!$user){
-            return $this->apiResponse(null, 'The user not found', 404);
+            return $this->apiResponse((object)[], 'The user not found', 404);
         }
         return $this->apiResponse(PostResource::collection($user->posts), 'success posts', 200);
     }                                                                       // One to Many
@@ -44,7 +44,7 @@ class UserController extends Controller
     public function getComments($id){
         $user = User::find($id);
         if(!$user){
-            return $this->apiResponse(null, 'The user not found', 404);
+            return $this->apiResponse((object)[], 'The user not found', 404);
         }
         return $this->apiResponse(CommentResource::collection($user->comments), 'success comments', 200);
     }                                                                       // One to Many
@@ -52,7 +52,7 @@ class UserController extends Controller
     public function getLikes($id){
         $user = User::find($id);
         if(!$user){
-            return $this->apiResponse(null, 'The user not found', 404);
+            return $this->apiResponse((object)[], 'The user not found', 404);
         }
         return $this->apiResponse(LikeResource::collection($user->likes), 'success likes', 200);
     }                                                                       // One to Many
